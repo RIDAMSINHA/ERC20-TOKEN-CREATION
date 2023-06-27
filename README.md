@@ -78,6 +78,12 @@ GEN tokens.
 
 10. You can view the transaction status and emitted events in the Remix console.
 
+## Authors
+
+RIDAM ADITYA SINHA
+
+ridamsinha20@gmail.com
+
 ## License
 
 The Degen Gaming Token contract is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for more information.
