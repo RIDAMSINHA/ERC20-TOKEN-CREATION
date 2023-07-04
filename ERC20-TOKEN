@@ -16,6 +16,9 @@ contract DegenToken {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Mint(address indexed to, uint256 value);
     event Burn(address indexed from, uint256 value);
+    event Redeem(address indexed from, string itemName);
+
+    string[] public items; // List of items for redemption
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function.");
@@ -28,6 +31,12 @@ contract DegenToken {
         decimals = 18;
         totalSupply = 0;
         owner = msg.sender;
+
+        // Initialize the list of items
+        items.push("CAP");
+        items.push("BAG");
+        items.push("SHOES");
+        // Add more items as needed
     }
 
     function balanceOf(address account) external view returns (uint256) {
@@ -79,5 +88,24 @@ contract DegenToken {
 
         emit Burn(msg.sender, amount);
         emit Transfer(msg.sender, address(0), amount);
+    }
+
+    function redeem() external returns (string memory) {
+        require(balances[msg.sender] > 0, "Insufficient balance to redeem.");
+        require(items.length > 0, "No items available for redemption.");
+
+        // Randomly select an item to redeem
+        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % items.length;
+        string memory chosenItem = items[randomIndex];
+
+        // Perform the redemption operation and update balances
+        uint256 redemptionAmount = 100; // Specify the number of tokens required for redemption
+        require(balances[msg.sender] >= redemptionAmount, "Insufficient balance to redeem the item.");
+        balances[msg.sender] -= redemptionAmount;
+
+        // Emit the redeem event
+        emit Redeem(msg.sender, chosenItem);
+
+        return chosenItem;
     }
 }
