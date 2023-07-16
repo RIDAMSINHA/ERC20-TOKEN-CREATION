@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.18;
 
 contract DegenToken {
     string public name;
@@ -18,7 +18,12 @@ contract DegenToken {
     event Burn(address indexed from, uint256 value);
     event Redeem(address indexed from, string itemName);
 
-    string[] public items; // List of items for redemption
+    struct NftItem {
+        string name;
+        uint256 price;
+    }
+
+    mapping(uint256 => NftItem) public nftItems;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function.");
@@ -31,12 +36,8 @@ contract DegenToken {
         decimals = 18;
         totalSupply = 0;
         owner = msg.sender;
-
-        // Initialize the list of items
-        items.push("CAP");
-        items.push("BAG");
-        items.push("SHOES");
-        // Add more items as needed
+        addNftItem(0, "BAG", 200);
+        addNftItem(1, "CAP", 100);
     }
 
     function balanceOf(address account) external view returns (uint256) {
@@ -50,13 +51,6 @@ contract DegenToken {
         balances[recipient] += amount;
 
         emit Transfer(msg.sender, recipient, amount);
-        return true;
-    }
-
-    function approve(address spender, uint256 amount) external returns (bool) {
-        allowances[msg.sender][spender] = amount;
-
-        emit Approval(msg.sender, spender, amount);
         return true;
     }
 
@@ -90,22 +84,21 @@ contract DegenToken {
         emit Transfer(msg.sender, address(0), amount);
     }
 
-    function redeem() external returns (string memory) {
+    function redeem(uint256 itemId) external returns (string memory) {
         require(balances[msg.sender] > 0, "Insufficient balance to redeem.");
-        require(items.length > 0, "No items available for redemption.");
+        require(nftItems[itemId].price > 0, "Invalid item ID.");
 
-        // Randomly select an item to redeem
-        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % items.length;
-        string memory chosenItem = items[randomIndex];
-
-        // Perform the redemption operation and update balances
-        uint256 redemptionAmount = 100; // Specify the number of tokens required for redemption
+        uint256 redemptionAmount = nftItems[itemId].price;
         require(balances[msg.sender] >= redemptionAmount, "Insufficient balance to redeem the item.");
+
         balances[msg.sender] -= redemptionAmount;
 
-        // Emit the redeem event
-        emit Redeem(msg.sender, chosenItem);
+        emit Redeem(msg.sender, nftItems[itemId].name);
 
-        return chosenItem;
+        return nftItems[itemId].name;
+    }
+
+    function addNftItem(uint256 itemId, string memory itemName, uint256 itemPrice) public onlyOwner {
+        nftItems[itemId] = NftItem(itemName, itemPrice);
     }
 }
